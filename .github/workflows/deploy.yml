@@ -1,0 +1,58 @@
+name: Build and Deploy Demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # umožní i ruční spuštění z GitHub UI
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Cache cross-compiler toolchain
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/opt/cross
+          key: i686-elf-toolchain-binutils2.42-gcc13.2.0
+
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential nasm wget
+
+      - name: Build cross-compiler (only on cache miss)
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          chmod +x ./build-toolchain.sh
+          ./build-toolchain.sh
+
+      - name: Build kernel
+        run: |
+          export PATH="$HOME/opt/cross/bin:$PATH"
+          make
+
+      - name: Prepare deploy folder
+        run: |
+          mkdir -p public
+          cp os-image.bin public/
+          cp index.html public/
+          cp libv86.js public/
+          cp v86.wasm public/
+          cp seabios.bin public/
+          cp vgabios.bin public/
+          cp coi-serviceworker.js public/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

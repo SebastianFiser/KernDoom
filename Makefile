@@ -9,11 +9,20 @@ boot.bin: boot/boot.asm
 entry.o: kernel/entry.asm
 	nasm -f elf32 kernel/entry.asm -o entry.o
 
+idt.o: kernel/idt.c
+	$(CC) $(CFLAGS) -o idt.o kernel/idt.c
+
+isr_asm.o: kernel/isr.asm
+	nasm -f elf32 kernel/isr.asm -o isr_asm.o
+
+isr.o: kernel/isr.c
+	$(CC) $(CFLAGS) -o isr.o kernel/isr.c
+
 kernel.o: kernel/main.c
 	$(CC) $(CFLAGS) -o kernel.o kernel/main.c
 
-kernel.elf: kernel.o entry.o linker.ld
-	i686-elf-ld -T linker.ld -o kernel.elf entry.o kernel.o
+kernel.elf: kernel.o entry.o idt.o isr_asm.o isr.o linker.ld
+	i686-elf-ld -T linker.ld -o kernel.elf entry.o kernel.o idt.o isr_asm.o isr.o
 
 kernel.bin: kernel.elf
 	i686-elf-objcopy -O binary kernel.elf kernel.bin
@@ -26,4 +35,4 @@ run: os-image.bin
 	qemu-system-i386 -drive format=raw,file=os-image.bin
 
 clean:
-	rm -f kernel.elf kernel.o boot.bin entry.o kernel.bin os-image.bin
+	rm -f kernel.elf kernel.o boot.bin entry.o idt.o isr_asm.o isr.o kernel.bin os-image.bin
