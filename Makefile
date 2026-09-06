@@ -1,7 +1,9 @@
 
 CC = i686-elf-gcc
 CFLAGS = -ffreestanding -c
-.PHONY: run clean
+.PHONY: run clean all
+
+all: os-image.bin
 
 boot.bin: boot/boot.asm
 	nasm -f bin boot/boot.asm -o boot.bin
