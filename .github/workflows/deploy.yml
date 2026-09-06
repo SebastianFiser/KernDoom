@@ -38,16 +38,21 @@ jobs:
           export PATH="$HOME/opt/cross/bin:$PATH"
           make
 
+      - name: Download v86 assets
+        run: |
+          mkdir public
+          V86_VERSION="0.5.319"
+          curl -fsSL "https://cdn.jsdelivr.net/npm/v86@${V86_VERSION}/build/libv86.js" -o public/libv86.js
+          curl -fsSL "https://cdn.jsdelivr.net/npm/v86@${V86_VERSION}/build/v86.wasm" -o public/v86.wasm
+          curl -fsSL "https://raw.githubusercontent.com/copy/v86/master/bios/seabios.bin" -o public/seabios.bin
+          curl -fsSL "https://raw.githubusercontent.com/copy/v86/master/bios/vgabios.bin" -o public/vgabios.bin
+          curl -fsSL "https://cdn.jsdelivr.net/npm/coi-serviceworker@0.1.7/coi-serviceworker.min.js" -o public/coi-serviceworker.js
+
       - name: Prepare deploy folder
         run: |
           mkdir -p public
           cp os-image.bin public/
           cp index.html public/
-          cp libv86.js public/
-          cp v86.wasm public/
-          cp seabios.bin public/
-          cp vgabios.bin public/
-          cp coi-serviceworker.js public/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
