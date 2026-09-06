@@ -1,29 +1,57 @@
 bits 16
 org 0x7C00
+extern kernel_main
 
 start:
+    mov [boot_drive], dl
     mov si, msg
-.print_loop:
-    lodsb
-    cmp al, 0
-    je .print_done
-    mov ah, 0x0E
-    int 0x10
-    jmp .print_loop
-.print_done:
+    call print_string
 
     call enable_a20
-
+    call load_kernel
     call protected_start
 
     hlt
     jmp $
+
+print_string:
+    lodsb
+    cmp al, 0
+    je print_done
+    mov ah, 0x0E
+    int 0x10
+    jmp print_string
+print_done:
+    ret
 
 enable_a20:
     in al, 0x92
     or al, 2
     out 0x92, al
     ret
+
+load_kernel:
+    mov ax, 0x1000
+    mov es, ax
+    mov bx, 0x0
+    mov ah, 0x02
+    mov al, 100
+    mov ch, 0
+    mov cl, 2
+    mov dh, 0
+    mov dl, [boot_drive]
+    int 0x13
+    jc disk_error
+    ret
+
+disk_error:
+    mov si, disk_error_msg
+    call print_string
+    hlt
+    jmp $
+
+disk_error_msg:
+    db "Disk error", 0
 
 protected_start:
     cli
@@ -34,12 +62,7 @@ protected_start:
     or eax, 1
     mov cr0, eax
 
-    jmp CODE_SEG:init_pm
 
-
-bits 32
-VGA_BUF_ADR equ 0xB8000
-init_pm:
     mov ax, DATA_SEG
     mov ds, ax
     mov es, ax
@@ -47,13 +70,8 @@ init_pm:
     mov gs, ax
     mov ss, ax
 
-    mov ebp, 0x90000
-    mov esp, ebp
+    jmp CODE_SEG:0x10000
 
-    mov byte [VGA_BUF_ADR], 'X'
-    mov byte [VGA_BUF_ADR + 1], 0x0F
-    hlt
-    jmp $
 
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
@@ -85,6 +103,9 @@ gdt_end:
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
+
+boot_drive:
+    db 0
 
 msg db "Hello from bootloader", 0
 
