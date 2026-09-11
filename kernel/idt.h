@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 extern void isr0();
+extern void irq0();
+extern void irq1();
 
 struct idt_entry {
     uint16_t offset_low;

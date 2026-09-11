@@ -1,30 +1,43 @@
 
 CC = i686-elf-gcc
 CFLAGS = -ffreestanding -c
+BUILD_DIR = build
 .PHONY: run clean all
 
 all: os-image.bin
 
+$(BUILD_DIR):
+	mkdir -p ./$(BUILD_DIR)
+
 boot.bin: boot/boot.asm
 	nasm -f bin boot/boot.asm -o boot.bin
 
-entry.o: kernel/entry.asm
-	nasm -f elf32 kernel/entry.asm -o entry.o
+$(BUILD_DIR)/entry.o: kernel/entry.asm | $(BUILD_DIR)
+	nasm -f elf32 kernel/entry.asm -o $(BUILD_DIR)/entry.o
 
-idt.o: kernel/idt.c
-	$(CC) $(CFLAGS) -o idt.o kernel/idt.c
+$(BUILD_DIR)/idt.o: kernel/idt.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/idt.o kernel/idt.c
 
-isr_asm.o: kernel/isr.asm
-	nasm -f elf32 kernel/isr.asm -o isr_asm.o
+$(BUILD_DIR)/isr_asm.o: kernel/isr.asm | $(BUILD_DIR)
+	nasm -f elf32 kernel/isr.asm -o $(BUILD_DIR)/isr_asm.o
 
-isr.o: kernel/isr.c
-	$(CC) $(CFLAGS) -o isr.o kernel/isr.c
+$(BUILD_DIR)/isr.o: kernel/isr.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/isr.o kernel/isr.c
 
-kernel.o: kernel/main.c
-	$(CC) $(CFLAGS) -o kernel.o kernel/main.c
+$(BUILD_DIR)/irq.o: drivers/irq.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/irq.o drivers/irq.c
 
-kernel.elf: kernel.o entry.o idt.o isr_asm.o isr.o linker.ld
-	i686-elf-ld -T linker.ld -o kernel.elf entry.o kernel.o idt.o isr_asm.o isr.o
+$(BUILD_DIR)/pic.o: drivers/pic.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/pic.o drivers/pic.c
+
+$(BUILD_DIR)/vga.o: drivers/vga.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/vga.o drivers/vga.c
+
+$(BUILD_DIR)/kernel.o: kernel/main.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/kernel.o kernel/main.c
+
+kernel.elf: $(BUILD_DIR)/kernel.o $(BUILD_DIR)/entry.o $(BUILD_DIR)/idt.o $(BUILD_DIR)/isr_asm.o $(BUILD_DIR)/isr.o $(BUILD_DIR)/irq.o $(BUILD_DIR)/pic.o $(BUILD_DIR)/vga.o linker.ld
+	i686-elf-ld -T linker.ld -o kernel.elf $(BUILD_DIR)/entry.o $(BUILD_DIR)/kernel.o $(BUILD_DIR)/idt.o $(BUILD_DIR)/isr_asm.o $(BUILD_DIR)/isr.o $(BUILD_DIR)/irq.o $(BUILD_DIR)/pic.o $(BUILD_DIR)/vga.o
 
 kernel.bin: kernel.elf
 	i686-elf-objcopy -O binary kernel.elf kernel.bin
@@ -37,4 +50,4 @@ run: os-image.bin
 	qemu-system-i386 -drive format=raw,file=os-image.bin
 
 clean:
-	rm -f kernel.elf kernel.o boot.bin entry.o idt.o isr_asm.o isr.o kernel.bin os-image.bin
+	rm -rf $(BUILD_DIR)

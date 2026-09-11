@@ -1,18 +1,13 @@
 #include "idt.h"
-
-void clear_screen() {
-    char *vga = (char *)0xB8000;
-    for(int i = 0; i < 2000; i++) {
-        vga[i * 2 ] = ' ';
-        vga[i * 2 + 1] = 0x0F;
-    }
-}
+#include "../drivers/pic.h"
+#include "../drivers/vga.h"
 
 void kernel_main() {
 
     clear_screen();
     idt_init();
-    __asm__ volatile ("int $0x0");
+    pic_remap(32, 40);
+    asm volatile("sti");
 
     while(1) {
 
