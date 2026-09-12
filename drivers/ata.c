@@ -1,5 +1,6 @@
 #include "ata.h"
 #include "../lib/io.h"
+#include "vga_graphics.h"
 
 void ata_read_sectors(uint32_t lba, uint8_t count, uint16_t *buffer) {
     outb(0x3F6, 0x02);
@@ -14,10 +15,14 @@ void ata_read_sectors(uint32_t lba, uint8_t count, uint16_t *buffer) {
 
     outb(0x1F7, 0x20);
 
-
+    uint32_t timeout = 100000;
     for ( int sector = 0; sector < count; sector++) {
         while (!(inb(0x1F7) & 0x08)) {
-
+            timeout--;
+            if (timeout == 0) {
+                clear_screen_graphics(15);
+                while (1);
+            }
         }
 
         for (int i = 0; i < 256; i++) {
