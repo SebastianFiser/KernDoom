@@ -9,6 +9,7 @@ start:
 
     call enable_a20
     call load_kernel
+    call set_video_mode
     call protected_start
 
     hlt
@@ -52,6 +53,12 @@ disk_error:
 
 disk_error_msg:
     db "Disk error", 0
+
+set_video_mode:
+    mov ah, 0x00
+    mov al, 0x13
+    int 0x10
+    ret
 
 protected_start:
     cli

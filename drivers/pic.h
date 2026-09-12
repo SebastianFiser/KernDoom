@@ -10,5 +10,7 @@
 #define ICW1_INIT 0x11
 #define ICW4_8086 0x01
 
+#define BASE 1193182
 
 void pic_remap(int offset1, int offset2);
+void pit_set_frequency(uint32_t hz);
