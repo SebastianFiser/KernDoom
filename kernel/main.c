@@ -7,16 +7,16 @@
 
 void kernel_main() {
 
-    clear_screen_graphics(1);
+    clear_screen_graphics(0);
     idt_init();
-    clear_screen_graphics(3);
+    clear_screen_graphics(15);
     pic_remap(32, 40);
-    clear_screen_graphics(5);
+    clear_screen_graphics(0);
     pit_set_frequency(35);
-    clear_screen_graphics(6);
+    clear_screen_graphics(15);
     asm volatile("sti");
 
-    clear_screen_graphics(13);
+    clear_screen_graphics(0);
 
     load_wad();
 
