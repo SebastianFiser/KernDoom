@@ -13,6 +13,8 @@ void kernel_main() {
     pit_set_frequency(35);
     asm volatile("sti");
 
+    clear_screen_graphics(13);
+
     load_wad();
 
     char *wad_buffer = (char*)0x200000;
