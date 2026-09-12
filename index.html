@@ -92,7 +92,7 @@
                 bios: { url: "seabios.bin" },
                 vga_bios: { url: "vgabios.bin" },
                 hda: {
-                  url: "./os-image.bin",
+                  url: "./os-image.bin?t=" + Date.now(),
                   async: false,
                 },
                 autostart:true,
