@@ -9,14 +9,14 @@ void kernel_main() {
 
     clear_screen_graphics(0);
     idt_init();
-    clear_screen_graphics(15);
+    clear_screen_graphics(1);
     pic_remap(32, 40);
-    clear_screen_graphics(0);
+    clear_screen_graphics(2);
     pit_set_frequency(35);
-    clear_screen_graphics(15);
+    clear_screen_graphics(3);
     asm volatile("sti");
 
-    clear_screen_graphics(0);
+    clear_screen_graphics(5);
 
     load_wad();
 
