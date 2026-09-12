@@ -36,7 +36,7 @@ load_kernel:
     mov es, ax
     mov bx, 0x0
     mov ah, 0x02
-    mov al, 100
+    mov al, 20
     mov ch, 0
     mov cl, 2
     mov dh, 0
