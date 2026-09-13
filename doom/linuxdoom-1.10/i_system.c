@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // $Id:$
@@ -14,7 +14,7 @@
 // FITNESS FOR A PARTICULAR PURPOSE. See the DOOM Source Code License
 // for more details.
 //
-// $Log:$
+// $Log:$F
 //
 // DESCRIPTION:
 //
@@ -26,10 +26,9 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include "../../lib/string.h"
 
 #include <stdarg.h>
-#include <sys/time.h>
 #include <unistd.h>
 
 #include "doomdef.h"
@@ -45,6 +44,11 @@ rcsid[] = "$Id: m_bbox.c,v 1.1 1997/02/03 22:45:10 b1 Exp $";
 #endif
 #include "i_system.h"
 
+
+#include "../../drivers/irq.h"
+#include "../../kernel/memmory.h"
+#include "../../kernel/sys.h"
+#include "../../drivers/vga_graphics.h"
 
 
 
@@ -73,10 +77,10 @@ int  I_GetHeapSize (void)
     return mb_used*1024*1024;
 }
 
-byte* I_ZoneBase (int*	size)
+byte *I_ZoneBase (int *size)
 {
-    *size = mb_used*1024*1024;
-    return (byte *) malloc (*size);
+    *size = ZONE_SIZE;
+    return (byte *) ZONE_BASE;
 }
 
 
@@ -87,16 +91,7 @@ byte* I_ZoneBase (int*	size)
 //
 int  I_GetTime (void)
 {
-    struct timeval	tp;
-    struct timezone	tzp;
-    int			newtics;
-    static int		basetime=0;
-  
-    gettimeofday(&tp, &tzp);
-    if (!basetime)
-	basetime = tp.tv_sec;
-    newtics = (tp.tv_sec-basetime)*TICRATE + tp.tv_usec*TICRATE/1000000;
-    return newtics;
+    return (int)tick_count;
 }
 
 
@@ -115,23 +110,23 @@ void I_Init (void)
 //
 void I_Quit (void)
 {
-    D_QuitNetGame ();
-    I_ShutdownSound();
-    I_ShutdownMusic();
-    M_SaveDefaults ();
-    I_ShutdownGraphics();
-    exit(0);
+    //D_QuitNetGame ();
+    //I_ShutdownSound();
+    //I_ShutdownMusic();
+    //M_SaveDefaults ();
+    //I_ShutdownGraphics();
+    halt_system();
 }
 
 void I_WaitVBL(int count)
 {
 #ifdef SGI
-    sginap(1);                                           
+    sginap(1);
 #else
 #ifdef SUN
     sleep(0);
 #else
-    usleep (count * (1000000/70) );                                
+    usleep (count * (1000000/70) );
 #endif
 #endif
 }
@@ -144,40 +139,30 @@ void I_EndRead(void)
 {
 }
 
-byte*	I_AllocLow(int length)
-{
-    byte*	mem;
-        
-    mem = (byte *)malloc (length);
-    memset (mem,0,length);
-    return mem;
-}
-
 
 //
 // I_Error
 //
 extern boolean demorecording;
 
-void I_Error (char *error, ...)
+void I_Error (const char *error, ...)
 {
     va_list	argptr;
-
+    char buffer[256];
     // Message first.
     va_start (argptr,error);
-    fprintf (stderr, "Error: ");
-    vfprintf (stderr,error,argptr);
-    fprintf (stderr, "\n");
+    strcpy(buffer, "Error: ");
+    int len = strlen("Error: ");
+    vsprintf(buffer + len, error, argptr);
+    draw_string(0, 0, buffer, 0x0F);
     va_end (argptr);
 
-    fflush( stderr );
-
     // Shutdown. Here might be other errors.
-    if (demorecording)
-	G_CheckDemoStatus();
+    //if (demorecording)
+    //G_CheckDemoStatus();
 
-    D_QuitNetGame ();
-    I_ShutdownGraphics();
-    
-    exit(-1);
+    //D_QuitNetGame ();
+    //I_ShutdownGraphics();
+
+    halt_system();
 }

@@ -83,10 +83,8 @@ void itoa(int value, char *buf, int base) {
     }
 }
 
-void sprintf(char *buf, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
 
+void vsprintf(char *buf, const char *fmt, va_list args) {
     int buf_i = 0;
     char num_buf[32];
 
@@ -126,5 +124,11 @@ void sprintf(char *buf, const char *fmt, ...) {
     }
 
     buf[buf_i] = '\0';
+}
+
+void sprintf(char *buf, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(buf, fmt, args);
     va_end(args);
 }

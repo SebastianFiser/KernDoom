@@ -4,3 +4,5 @@
 void put_pixel(int x, int y, uint8_t color);
 
 void clear_screen_graphics(uint8_t color);
+
+void draw_string(int x, int y, const char *str, uint8_t color);
